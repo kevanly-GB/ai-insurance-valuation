@@ -158,7 +158,11 @@ resource "aws_s3_bucket_public_access_block" "evidence" {
 }
 resource "aws_s3_bucket_server_side_encryption_configuration" "evidence" {
   bucket = aws_s3_bucket.evidence.id
-  rule { apply_server_side_encryption_by_default { sse_algorithm = "AES256" } }
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
 }
 resource "aws_s3_bucket_versioning" "evidence" {
   bucket = aws_s3_bucket.evidence.id
@@ -218,14 +222,21 @@ resource "aws_cloudfront_distribution" "web" {
     response_code = 200
     response_page_path = "/index.html"
   }
-  restrictions { geo_restriction { restriction_type = "none" } }
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
   viewer_certificate { cloudfront_default_certificate = true }
 }
 data "aws_iam_policy_document" "web" {
   statement {
     actions = ["s3:GetObject"]
     resources = [format("%s/*",aws_s3_bucket.web.arn)]
-    principals { type = "Service", identifiers = ["cloudfront.amazonaws.com"] }
+    principals {
+      type = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
     condition {
       test = "StringEquals"
       variable = "AWS:SourceArn"
@@ -253,7 +264,10 @@ resource "aws_cognito_user_pool" "users" {
   mfa_configuration = "OPTIONAL"
   software_token_mfa_configuration { enabled = true }
   account_recovery_setting {
-    recovery_mechanism { name = "verified_email", priority = 1 }
+    recovery_mechanism {
+      name = "verified_email"
+      priority = 1
+    }
   }
 }
 resource "aws_cognito_user_pool_client" "web" {
@@ -279,7 +293,10 @@ resource "aws_sqs_queue" "jobs" {
 data "aws_iam_policy_document" "assume" {
   statement {
     actions = ["sts:AssumeRole"]
-    principals { type = "Service", identifiers = ["lambda.amazonaws.com"] }
+    principals {
+      type = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
   }
 }
 resource "aws_iam_role" "lambda" {

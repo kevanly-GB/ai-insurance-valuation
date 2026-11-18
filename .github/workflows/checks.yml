@@ -27,5 +27,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
       - run: terraform -chdir=infrastructure/terraform fmt -recursive
+      - run: mkdir -p build && python -c "import zipfile; zipfile.ZipFile('build/insurance-lambda.zip','w').close()"
       - run: terraform -chdir=infrastructure/terraform init -backend=false
       - run: terraform -chdir=infrastructure/terraform validate
