@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: insurance
+      POSTGRES_USER: insurance
+      POSTGRES_PASSWORD: local_only_change_me
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U insurance"]
+      interval: 3s
+      retries: 15
+  api:
+    build: ./backend
+    environment:
+      APP_ENV: local
+      ALLOW_DEV_AUTH: "true"
+      DATABASE_URL: postgresql+psycopg://insurance:local_only_change_me@db:5432/insurance
+      FRONTEND_ORIGINS: http://localhost:5173
+      LOCAL_UPLOAD_DIR: /srv/backend/.local_uploads
+    volumes:
+      - evidence:/srv/backend/.local_uploads
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  dbdata:
+  evidence:
