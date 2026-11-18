@@ -1,0 +1,32 @@
+name: Verify platform
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r backend/requirements.txt
+      - run: PYTHONPATH=backend APP_ENV=local ALLOW_DEV_AUTH=true DATABASE_URL=sqlite:///./ci.db pytest -q backend/tests
+  react:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: cd frontend && npm install && npm run build
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform -chdir=infrastructure/terraform fmt -recursive
+      - run: mkdir -p build && python -c "import zipfile; zipfile.ZipFile('build/insurance-lambda.zip','w').close()"
+      - run: terraform -chdir=infrastructure/terraform init -backend=false
+      - run: terraform -chdir=infrastructure/terraform validate

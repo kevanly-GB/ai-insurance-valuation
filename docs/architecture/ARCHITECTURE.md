@@ -1,0 +1,7 @@
+# Architecture and processing model
+
+The claimant or assessor uses a React static UI served from CloudFront with private S3 origin. API Gateway exposes the FastAPI Lambda. Cognito authenticates human users; the API checks access tokens and role/group permissions. RDS PostgreSQL in private subnets stores claim state, document records, versioned valuations, assessor overrides, reports, evidence requests and audits. A private evidence bucket stores uploaded file bytes. Document uploads use presigned POST then S3 confirmation, SQS queue and processing Lambda; optional Textract provides OCR for scanned material. Five domain analyzers collect source-labelled values; optional Bedrock provides summaries; a deterministic orchestrator produces flagged, evidence-linked totals. Only human assessors can publish a client report.
+
+Suggested three-person division: engineer A — AWS/IAM/backend; engineer B — React, claimant and assessor journeys; engineer C — extraction/agent validation, synthetic fixtures, tests. Changes go through feature branches and peer-reviewed PRs. One designated engineer manages Terraform state until a remote encrypted and locked backend exists.
+
+Architecture deliberately favours explainability and isolated account resources over cheap always-on infrastructure. A NAT gateway and small RDS instance may charge continuously and must be removed after the capstone demonstration.
