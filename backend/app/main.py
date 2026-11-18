@@ -309,7 +309,7 @@ def approve_report(cid: str, rid: str, user=Depends(current_user)):
 def archive(cid: str, user=Depends(current_user)):
     assessor(user)
     with Session() as db:
-        c = visible_claim(db, cid, user, write=True)
+        c = visible_claim(db, cid, user)
         if c.status != "approved":
             raise HTTPException(409, "Only approved claims can be archived")
         c.status = "archived"
