@@ -1,47 +1,52 @@
-# Multi-Agent AI Insurance Valuation Platform
+# Multi-Agent AI Insurance Valuation Support Platform
 
-University capstone project: a multi-modal document assessment and evidence-linked insurance valuation support platform for commercial and property claims.
+Capstone **development MVP**, not a production insurer decision engine. React frontend + FastAPI backend + PostgreSQL + AWS infrastructure in Terraform.
 
-> **Current state:** repository folder scaffold only. The frontend, backend, AWS resources, database, and AI workflows still need to be implemented. Nothing in this repository should be treated as a deployed insurance decision system.
+## Implemented workflow
 
-## Intended workflow
-1. Claimant signs in and creates an insurance claim.
-2. Claimant uploads supporting PDFs, DOCX, XLSX/CSV files and photographs.
-3. Backend validates files and stores evidence in Amazon S3.
-4. Document processing classifies and extracts content, including OCR as needed.
-5. Specialised AI agents analyse assets, human capital, finance, property damage and legal/policy evidence; an orchestrator consolidates findings and checks anomalies.
-6. Claims assessor reviews evidence-linked valuations, corrects results where necessary, approves and publishes a client-facing report.
-7. Assessment versions, actions and approvals are logged for audit.
+1. Cognito login (local development supports explicitly enabled demo identities).
+2. Claimants create claims and upload PDF, DOCX, XLSX, CSV and JPEG/PNG evidence.
+3. Documents go directly into private S3 using a presigned POST. SQS queues processing; a separate Lambda validates signatures and extracts text, tabular content and optional Textract OCR.
+4. Five valuation domains process labelled amounts: assets, human capital, finance, property, and policy/legal. The orchestrator consolidates evidence IDs, line references, missing-evidence flags and heuristic scores. Optional Bedrock generates narrative summaries only.
+5. Assessors initiate valuation, request further evidence, override amounts with a reason, edit draft reports, approve a report and inspect audit activity.
+6. Claimants can see and download approved text reports. Approved cases can be archived and locked from changes.
 
-## Planned technologies
-- **Frontend:** React
-- **Backend:** Python and FastAPI
-- **Data:** PostgreSQL for records; Amazon S3 for evidence and generated reports
-- **Authentication:** Amazon Cognito (proposed)
-- **Document processing:** Amazon Textract, PyMuPDF, pandas, openpyxl, and image processing tools as appropriate
-- **Agent coordination:** LangGraph and a configurable LLM provider
-- **Infrastructure:** AWS, with Terraform configuration to be added in `infrastructure/`
-- **Tests:** pytest, frontend tests and end-to-end workflows
+**Important:** Five prototype domain analyzers are currently rule-based, not autonomous LLM agents. There is no LangGraph orchestration yet. This is deliberately evidence-constrained arithmetic, not validated insurance valuation, policy coverage analysis or a payment recommendation.
 
-## Repository layout
-- `frontend/` — React user interfaces for claimants and assessors
-- `backend/app/api/` — FastAPI endpoints
-- `backend/app/agents/` — intake, specialist agents, orchestrator, anomaly detection, prompts and tools
-- `backend/app/services/` — document extraction, S3 storage, valuation, reporting, audit and notifications
-- `backend/tests/` — backend unit and integration tests
-- `database/` — PostgreSQL migrations, schemas/queries and seed data
-- `infrastructure/` — AWS infrastructure-as-code, scripts and monitoring
-- `sample-documents/` — **synthetic/non-sensitive** test evidence, organised by document type
-- `docs/` — system design, requirements, diagrams, setup and security decisions
-- `tests/` — cross-service end-to-end, performance and security tests
-- `.github/` — CI workflows and contribution templates when implemented
+## Quick local start
 
-## Development sequence
-1. Initialise React and FastAPI projects; add a working health-check endpoint and an API call from React.
-2. Set up PostgreSQL migrations, Cognito authentication and role-based access control.
-3. Implement claim creation, S3 upload, validation and document classification/extraction.
-4. Implement one AI specialist end-to-end, then add the other agents and LangGraph orchestration.
-5. Add assessor review, valuation report generation, version tracking and audit logging.
-6. Add automated tests, deploy to a controlled AWS development environment, and validate with synthetic documents.
+Requirements: Docker, Node.js 22+, npm.
 
-Use `.env.example` for configuration names. Never commit API keys, cloud credentials, real insurance records or personally identifiable claimant information. See `CONTRIBUTING.md` for collaboration guidance.
+    docker compose up --build -d
+    cp frontend/.env.example frontend/.env.local
+    cd frontend
+    npm install
+    npm run dev
+
+Visit http://localhost:5173. Choose claimant to create a synthetic claim and upload a sample document. Sign out and choose assessor to run the valuation and approve the report. Backend health: http://localhost:8000/health
+
+Stop with: docker compose down. Adding -v deletes local demo database and evidence.
+
+## AWS deployment
+
+Follow the full step-by-step instructions in docs/setup/AWS_STEP_BY_STEP.md. The default region is Sydney (ap-southeast-2). You will need an AWS account, short-lived AWS CLI credentials, Docker, Python 3.12, Terraform and npm. AWS resources are chargeable; NAT gateway and RDS have idle charges.
+
+- Infrastructure: infrastructure/terraform/main.tf
+- Build Lambda deployment ZIP: python infrastructure/scripts/build_lambda.py
+- Build/publish React: bash infrastructure/scripts/deploy_frontend.sh
+- Deployment output: terraform -chdir=infrastructure/terraform output
+
+## Tests and collaboration
+
+    PYTHONPATH=backend APP_ENV=local ALLOW_DEV_AUTH=true pytest backend/tests -q
+    cd frontend && npm install && npm run build
+    terraform -chdir=infrastructure/terraform fmt
+    terraform -chdir=infrastructure/terraform validate
+
+Work on feature branches, review PRs, and never commit secrets or real insurance records.
+
+## Known non-implemented items
+
+Guided AI intake, sophisticated anomaly checks, autonomous LangGraph agent workflow, quantitative visual-photo damage evaluation, anti-malware quarantine, benchmark-reconciled financial valuations, calibrated confidence, PDF/DOCX reports, notification delivery, audit log immutability, tested NFRs and production migration/secrets/retention practices. Details in docs/requirements/IMPLEMENTATION_MATRIX.md.
+
+This capstone software must be tested only with fabricated or non-sensitive documents.
