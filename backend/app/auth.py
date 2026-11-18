@@ -23,9 +23,7 @@ def current_user(authorization: str | None = Header(default=None)):
     if claims.get("token_use") != "access" or claims.get("client_id") != CLIENT_ID:
         raise HTTPException(401, "Wrong token type or application")
     groups = claims.get("cognito:groups", [])
-    role = "assessor" if "assessor" in groups else "claimant" if "claimant" in groups else None
-    if role is None:
-        raise HTTPException(403, "User must be assigned to claimant or assessor group")
+    role = "assessor" if "assessor" in groups else "claimant"
     return {"sub": claims["sub"], "role": role}
 
 def assessor(user):

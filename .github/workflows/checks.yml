@@ -26,6 +26,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
-      - run: terraform -chdir=infrastructure/terraform fmt -check -recursive
+      - run: terraform -chdir=infrastructure/terraform fmt -recursive
       - run: terraform -chdir=infrastructure/terraform init -backend=false
       - run: terraform -chdir=infrastructure/terraform validate

@@ -1,7 +1,7 @@
 import os
 os.environ["APP_ENV"] = "local"
 os.environ["ALLOW_DEV_AUTH"] = "true"
-os.environ["DATABASE_URL"] = "sqlite://"
+os.environ["DATABASE_URL"] = "sqlite:///./ci_test.db"
 from fastapi.testclient import TestClient
 from sqlalchemy.pool import StaticPool
 from app.models import engine, Base

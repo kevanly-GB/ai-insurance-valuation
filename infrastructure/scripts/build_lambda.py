@@ -23,4 +23,4 @@ with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED, compressleve
         if path.is_file():
             archive.write(path, path.relative_to(package))
 print("Built", output, "bytes:", output.stat().st_size)
-print("For ZIP packages > 50 MiB compressed, upload to S3 and configure s3_bucket and s3_key for aws_lambda_function.")
+print("Terraform uploads this artifact to a private S3 bucket. AWS Lambda still enforces a 250 MiB uncompressed limit.")

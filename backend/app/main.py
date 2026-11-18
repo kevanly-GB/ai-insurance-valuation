@@ -66,8 +66,8 @@ def visible_claim(db, cid, user, write=False):
     c = db.get(Claim, cid)
     if c is None or (user["role"] != "assessor" and c.owner_sub != user["sub"]):
         raise HTTPException(404, "Claim not found")
-    if write and c.status == "archived":
-        raise HTTPException(409, "Archived claims are read-only")
+    if write and c.status in ("approved", "archived"):
+        raise HTTPException(409, "Approved or archived claims are read-only")
     return c
 
 @app.get("/health")

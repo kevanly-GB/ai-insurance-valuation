@@ -127,6 +127,24 @@ resource "aws_db_instance" "db" {
   deletion_protection = false
   skip_final_snapshot = true
 }
+resource "aws_s3_bucket" "artifacts" {
+  bucket_prefix = format("%s-build-",var.prefix)
+  force_destroy = false
+}
+resource "aws_s3_bucket_public_access_block" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  block_public_acls = true
+  block_public_policy = true
+  ignore_public_acls = true
+  restrict_public_buckets = true
+}
+resource "aws_s3_object" "lambda" {
+  bucket = aws_s3_bucket.artifacts.id
+  key = "lambda/insurance-lambda.zip"
+  source = var.lambda_zip_path
+  etag = filemd5(var.lambda_zip_path)
+  server_side_encryption = "AES256"
+}
 resource "aws_s3_bucket" "evidence" {
   bucket_prefix = format("%s-evidence-",var.prefix)
   force_destroy = false
@@ -312,7 +330,8 @@ resource "aws_cloudwatch_log_group" "worker" {
 }
 resource "aws_lambda_function" "api" {
   function_name = format("%s-api",var.prefix)
-  filename = var.lambda_zip_path
+  s3_bucket = aws_s3_bucket.artifacts.id
+  s3_key = aws_s3_object.lambda.key
   source_code_hash = filebase64sha256(var.lambda_zip_path)
   runtime = "python3.12"
   handler = "app.main.handler"
@@ -328,7 +347,8 @@ resource "aws_lambda_function" "api" {
 }
 resource "aws_lambda_function" "worker" {
   function_name = format("%s-worker",var.prefix)
-  filename = var.lambda_zip_path
+  s3_bucket = aws_s3_bucket.artifacts.id
+  s3_key = aws_s3_object.lambda.key
   source_code_hash = filebase64sha256(var.lambda_zip_path)
   runtime = "python3.12"
   handler = "app.worker.handler"

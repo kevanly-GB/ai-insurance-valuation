@@ -38,7 +38,7 @@ class Document(Base):
     state: Mapped[str] = mapped_column(String(25), default="pending")
     classification: Mapped[str] = mapped_column(String(50), default="unknown")
     text: Mapped[str] = mapped_column(Text, default="")
-    sha256: Mapped[str] = mapped_column(String(64), default="")
+    sha256: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
     byte_size: Mapped[int] = mapped_column(Integer, default=0)
     error: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
